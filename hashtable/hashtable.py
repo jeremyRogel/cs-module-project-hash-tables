@@ -21,7 +21,9 @@ class HashTable:
     """
 
     def __init__(self, capacity):
-        # Your code here
+        self.capacity = capacity
+        self.data = [None] * capacity
+
 
 
     def get_num_slots(self):
@@ -34,7 +36,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        return len(self.data)
 
 
     def get_load_factor(self):
@@ -43,7 +45,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        return len(self.data) * 0.75
 
 
     def fnv1(self, key):
@@ -53,7 +55,14 @@ class HashTable:
         Implement this, and/or DJB2.
         """
 
-        # Your code here
+        fnv_prime = 1099511628211
+        offset_basis = 146959810393466560377
+        hash_value = offset_basis
+        key_utf8 = key.encode()
+        for byte in key_utf8:
+            hash_value = hash_value ^ byte
+            hash_value = hash_value * fnv_prime
+        return hash_value
 
 
     def djb2(self, key):
@@ -62,7 +71,10 @@ class HashTable:
 
         Implement this, and/or FNV-1.
         """
-        # Your code here
+        hash_value = 5381
+        for char in key:
+            hash_value = (hash_value * 33) + ord(char)
+        return hash_value
 
 
     def hash_index(self, key):
@@ -70,8 +82,8 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
-        return self.djb2(key) % self.capacity
+        return self.fnv1(key) % self.capacity
+        #return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -81,7 +93,11 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        index = self.hash_index(key)
+        if self.data[index] is None:
+            self.data[index] = HashTableEntry(key, value)
+        else:
+            self.data[index].value = value
 
 
     def delete(self, key):
@@ -92,7 +108,11 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        index = self.hash_index(key)
+        if self.data[index] is not None:
+            self.data[index].value = None
+        else:
+            print("Key was not found.")
 
 
     def get(self, key):
@@ -103,7 +123,11 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        index = self.hash_index(key)
+        if self.data[index] is None:
+            return None
+        if self.data[index].key is key:
+            return self.data[index].value
 
 
     def resize(self, new_capacity):
@@ -113,7 +137,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        pass
 
 
 
