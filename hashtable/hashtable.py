@@ -21,7 +21,10 @@ class HashTable:
     """
 
     def __init__(self, capacity):
-        # Your code here
+        self.capacity = capacity
+        self.data = [None] * capacity
+        self.entries = 0
+
 
 
     def get_num_slots(self):
@@ -34,7 +37,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        return self.entries / self.capacity
 
 
     def get_load_factor(self):
@@ -43,7 +46,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        return len(self.data) * 0.75
 
 
     def fnv1(self, key):
@@ -53,7 +56,14 @@ class HashTable:
         Implement this, and/or DJB2.
         """
 
-        # Your code here
+        fnv_prime = 1099511628211
+        offset_basis = 146959810393466560377
+        hash_value = offset_basis
+        key_utf8 = key.encode()
+        for byte in key_utf8:
+            hash_value = hash_value ^ byte
+            hash_value = hash_value * fnv_prime
+        return hash_value
 
 
     def djb2(self, key):
@@ -62,7 +72,10 @@ class HashTable:
 
         Implement this, and/or FNV-1.
         """
-        # Your code here
+        hash_value = 5381
+        for char in key:
+            hash_value = (hash_value * 33) + ord(char)
+        return hash_value
 
 
     def hash_index(self, key):
@@ -70,8 +83,8 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
-        return self.djb2(key) % self.capacity
+        return self.fnv1(key) % self.capacity
+        #return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -81,7 +94,25 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        index = self.hash_index(key)
+        new_entry = HashTableEntry(key, value)
+        current = self.data[index]
+        if self.data[index] is None:
+            self.data[index] = HashTableEntry(key, value)
+            self.entries += 1
+            if self.get_load_factor() > 0.7:
+                self.resize(self.capacity * 2)
+        else:
+            while current:
+                if current.key is key:
+                    current.value = value
+                    return
+                previous = current
+                current = current.next
+            previous.next = new_entry
+            self.entries +=1
+            if self.get_load_factor() > 0.7:
+                self.resize(self.capacity * 2)
 
 
     def delete(self, key):
@@ -92,7 +123,23 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        index = self.hash_index(key)
+        current = self.data[index]
+        previous = current
+        if current.key is key:
+            current.value = None
+            current = None
+        elif current is None:
+            print("Key was not found.")
+        else:
+            while current is not None:
+                previous = current
+                current = current.next
+                if current.key is key:
+                    current.value = None
+                    previous.next = None
+                    return 
+            print("Key was not found.")
 
 
     def get(self, key):
@@ -103,7 +150,19 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        index = self.hash_index(key)
+
+        if self.data[index] is None:
+            return None
+        if self.data[index].key is key:
+            return self.data[index].value
+        else:
+            current = self.data[index]
+            while current.next is not None:
+                current = current.next
+                if current.key is key:
+                    return current.value
+            return None
 
 
     def resize(self, new_capacity):
@@ -113,7 +172,17 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        new_ht = HashTable(new_capacity)
+        for entry in self.data:
+            if entry:
+                new_ht.put(entry.key, entry.value)
+                if entry.next:
+                    current = entry
+                    while current.next:
+                        current = current.next
+                        new_ht.put(current.key, current.value)
+        self.data = new_ht.data
+        self.capacity = new_ht.capacity
 
 
 
@@ -151,3 +220,77 @@ if __name__ == "__main__":
         print(ht.get(f"line_{i}"))
 
     print("")
+
+#     ht2 = HashTable(8)
+
+# print(f"Capacity: {ht2.capacity}")
+# ht2.put("key-0", "val-0")
+# ht2.put("key-1", "val-1")
+# ht2.put("key-2", "val-2")
+# ht2.put("key-3", "val-3")
+# ht2.put("key-4", "val-4")
+# ht2.put("key-5", "val-5")
+# ht2.put("key-6", "val-6")
+# ht2.put("key-7", "val-7")
+
+# print(f"Capacity: {ht2.capacity}")
+# ht2.put("key-8", "val-8")
+# ht2.put("key-9", "val-9")
+# ht2.put("key-10", "val-10")
+# ht2.put("key-11", "val-11")
+# ht2.put("key-12", "val-12")
+# ht2.put("key-13", "val-13")
+# ht2.put("key-14", "val-14")
+# ht2.put("key-15", "val-15")
+# x = ht2.get("key-15")
+# print(f"Get for key-15: {x}")
+# print(f"Capacity: {ht2.capacity}")
+
+# ht2.delete("key-15")
+# ht2.delete("key-14")
+# ht2.delete("key-13")
+# ht2.delete("key-12")
+# ht2.delete("key-11")
+# ht2.delete("key-10")
+# ht2.delete("key-9")
+# ht2.delete("key-8")
+# x = ht2.capacity // 2
+# print(f"Cap // 2: {x}")
+# ht2.resize(x)
+# print(f"Capacity after resize: {ht2.capacity}")
+# y = ht2.get_load_factor()
+# print(f"Load Factor: {y}")
+# print(f"Entries: {ht2.entries}")
+# print(f"Capacity: {ht2.capacity}")
+# ht2.delete("key-7")
+# ht2.delete("key-6")
+# ht2.delete("key-5")
+# y = ht2.get_load_factor()
+# print(f"Load Factor: {y}")
+# print(f"Entries: {ht2.entries}")
+# print(f"Capacity: {ht2.capacity}")
+# ht2.delete("key-4")
+# ht2.delete("key-3")
+# ht2.delete("key-2")
+# y = ht2.get_load_factor()
+# print(f"Load Factor: {y}")
+# print(f"Entries: {ht2.entries}")
+# print(f"Capacity: {ht2.capacity}") 
+# print(f"Capacity: {ht2.capacity}")
+
+# # def slowfun_too_slow(x, y):
+# #     v = math.pow(x, y)
+# #     v = math.factorial(v)
+# #     v //= (x + y)
+# #     v %= 982451653
+
+# #     return v
+# import math
+# v = math.pow(3, 5)
+# print(v)
+# v = math.factorial(int(v))
+# print(v)
+# v //= (3 + 5)
+# print(v)
+# v %= 982451653
+# print(v) 
